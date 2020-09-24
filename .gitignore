@@ -1,3 +1,9 @@
+pc_data/*
+red_list_api/*
+results_classifications_*/
+fig_data*/
+*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
