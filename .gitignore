@@ -1,8 +1,8 @@
 pc_data/*
 red_list_api/*
-results_classifications_*/
-fig_data*/
+*.pickle
 *.zip
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

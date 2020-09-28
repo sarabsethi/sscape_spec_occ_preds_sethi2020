@@ -73,7 +73,6 @@ for spec_type in all_spec_types:
                 labs_train, labs_test = pcs_spec_labs[train_index], pcs_spec_labs[test_index]
 
                 gmm_max_comps = 500
-                gmm_max_comps = 1
                 gmm_cov_type = 'diag'
 
                 tqdm.write('{}: Fitting Bayesian GMMs with {} comps, {} covs'.format(species.comm_name, gmm_max_comps, gmm_cov_type))

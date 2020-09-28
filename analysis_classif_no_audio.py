@@ -16,10 +16,10 @@ results_dir = 'results_classifications_logo'
 out_dir = 'fig_data'
 if 'logo' in results_dir:
     out_dir = '{}_logo'.format(out_dir)
-    
+
 for spec_type in all_spec_types:
 
-    feat = 'raw_audioset_feats_300s'
+    feat = 'raw_audioset_feats_096s'
 
     result_f_paths = get_all_class_file_paths(string_filters=feat, k=-1, spec_type=spec_type, classif_res_dir=results_dir)
     result_f_path_stems = np.unique(np.asarray(['_'.join(path.split('_')[:-1]) for path in result_f_paths]))
@@ -35,7 +35,7 @@ for spec_type in all_spec_types:
         tot_k = 11
     else:
         tot_k = 4
-        
+
     for load_f_path_stem in tqdm(result_f_path_stems):
 
         auc_ks = []
@@ -53,7 +53,7 @@ for spec_type in all_spec_types:
             chosen_pcs = np.asarray(chosen_pcs)
             all_pc_site_hrs = np.asarray(['{} {}'.format(pc.site.name,pc.dt.hour) for pc in chosen_pcs])
             all_unq_pc_site_hrs = np.unique(all_pc_site_hrs)
-            
+
             all_site_names = np.asarray([pc.site.name for pc in chosen_pcs])
             all_site_agbs = np.asarray([pc.site.get_agb() for pc in chosen_pcs])
             unq_sites, unq_site_ixs = np.unique(all_site_names, return_index=True)
@@ -66,7 +66,7 @@ for spec_type in all_spec_types:
                 ordered_nearest_sites = unq_sites[sort_ix]
                 nearest_sites.append(ordered_nearest_sites[ordered_nearest_sites!=site][0])
             nearest_sites = np.asarray(nearest_sites)
-            
+
             train_pc_site_hrs = np.asarray(['{} {}'.format(pc.site.name,pc.dt.hour) for pc in chosen_pcs[train_index]])
             test_pc_site_hrs = np.asarray(['{} {}'.format(pc.site.name,pc.dt.hour) for pc in chosen_pcs[test_index]])
 
@@ -96,7 +96,7 @@ for spec_type in all_spec_types:
                 print('k = {} only one unique test label {}, AUC = nan'.format(k, np.unique(labs_test)))
                 auc_ks.append(np.nan)
                 continue
-                
+
             auc_k_ = roc_auc_score(labs_test, test_scores)
             tqdm.write('k = {}, auc_k_ = {}'.format(k, auc_k_))
             auc_ks.append(auc_k_)
@@ -126,7 +126,7 @@ for spec_type in all_spec_types:
         all_n_occs = np.hstack((all_n_occs,np.sum(pcs_spec_labs)))
 
     sort_idx = np.argsort(np.asarray(all_auc))
-    
+
     fig_savef = 'no_audio_classif_scores_{}'.format(spec_type)
 
     save_path = os.path.join(out_dir,'{}.pickle'.format(fig_savef))
