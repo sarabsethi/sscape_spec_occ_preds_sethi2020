@@ -1,30 +1,29 @@
-import pickle
 import os
 import numpy as np
 import matplotlib.gridspec as gridspec
-from pc_data_tools import load_pc_dataset, get_secs_per_audio_feat, get_avi_pcs_no_water_sites,get_avi_specs_min_pres,get_herp_pcs_no_water_sites,get_herp_specs_min_pres, get_all_class_file_paths, get_secs_per_audio_feat, get_nice_lab
 import matplotlib.pyplot as plt
-from scipy import stats
 import matplotlib
 from fig_compare_classif_feats import do_auc_tscale_plot
 from fig_chi2_auc_site_time import plot_chi2_fig
+
+
+'''
+Figure 1 is a combination of do_auc_tscale_plot and plot_chi2_fig - this script simply
+places the two individual plots into subplots of a larger figure
+'''
 
 matplotlib.rc('font', size=18)
 
 fig = plt.figure(figsize=(21,8.5))
 gs = fig.add_gridspec(1, 5)
 
-
 lab_specs = np.asarray(['sooty-capped-babbler', 'tree-hole-frog','rhinoceros-hornbill','bold-striped-tit-babbler'])
 
 lab_all_specs = False
 all_spec_types = ['herp','avi','avi-rl']
 
-
-
 score_type = 'p60'
 feat = 'raw_audioset_feats_3s'
-
 
 fig.add_subplot(gs[0, :3])
 

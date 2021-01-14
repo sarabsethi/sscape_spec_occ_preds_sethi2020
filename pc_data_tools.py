@@ -11,41 +11,59 @@ CLASS_RES_PICKLE_SAVE_DIR = 'results_classifications_logo'
 
 
 def get_nice_lab(ugly_lab):
+    '''
+    Get nice labels for plotting using shorthands used throughout code
+    '''
+
+    # Species types
     if ugly_lab == 'avi': return 'Avifaunal species'
     if ugly_lab == 'avi-rl': return 'Avifaunal species (threatened - IUCN Red List)'
     if ugly_lab == 'herp': return 'Herpetofaunal species'
 
+    # Score types
     if ugly_lab == 'min': return 'Min'
     if ugly_lab == 'mean': return 'Mean'
     if ugly_lab == 'max': return 'Max'
     if ugly_lab == 'mean+max': return 'Mean + Max'
 
-
+    # Percentiles
     if ugly_lab[0] == 'p' and len(ugly_lab) == 3:
         ptile = ugly_lab[1:]
         return r'$P_{' + ptile + '}$'
 
+    # If nothing found, just return the argument
     return ugly_lab
 
 def get_spec_type_col(spec_type):
+    '''
+    Get colours to represent different species types
+    '''
+
     if spec_type == 'avi':
         return '#2782D2'
     if spec_type == 'herp':
         return '#45ad44'
     if spec_type == 'avi-rl':
         return '#960303'
-    
+
     return '#000000'
-    
+
 def save_pc_dataset(all_sites, all_taxa, all_pcs, save_fname):
+    '''
+    Save point count dataset to a pickle file
+    '''
+
     if not os.path.exists(PC_PICKLE_SAVE_DIR): os.makedirs(PC_PICKLE_SAVE_DIR)
 
     save_path = os.path.join(PC_PICKLE_SAVE_DIR, 'pc_data_parsed_{}.pickle'.format(save_fname))
-
     with open(save_path, 'wb') as f:
         pickle.dump([all_sites, all_taxa, all_pcs], f)
 
 def load_pc_dataset(load_f_name):
+    '''
+    Load a point count dataset from a pickle file
+    '''
+
     if not load_f_name.lower().endswith('.pickle'): load_f_name = load_f_name + '.pickle'
 
     load_path = os.path.join(PC_PICKLE_SAVE_DIR, load_f_name)
@@ -53,27 +71,35 @@ def load_pc_dataset(load_f_name):
     with open(load_path, 'rb') as f:
         all_sites, all_taxa, all_pcs = pickle.load(f)
 
+    # Make sure the same features are linked to all the point counts
     all_feat_names = [pc.audio_feat_name for pc in all_pcs]
     feat_names_consistent = all([feat_name == all_feat_names[0] for feat_name in all_feat_names])
     if feat_names_consistent: tqdm.write('All feature names are consistent across PCs: {}'.format(all_feat_names[0]))
     else: raise Exception('Not all feature names are consistent across PCs')
 
+    # Only return point counts which have audio features linked
     all_pcs_w_feats = [pc for pc in all_pcs if pc.audio_feats.shape[0] > 0]
 
     return all_feat_names[0], all_sites, all_taxa, all_pcs_w_feats
 
 
 def save_classification_data(species, chosen_pcs, train_index, test_index, pcs_feats, pcs_spec_labs, pres_gmm_train, abs_gmm_train, save_fname, spec_type, save_dir = CLASS_RES_PICKLE_SAVE_DIR):
-    save_dir = '{}_{}'.format(save_dir,spec_type)
+    '''
+    Save results from the classification task
+    '''
 
+    save_dir = '{}_{}'.format(save_dir,spec_type)
     if not os.path.exists(save_dir): os.makedirs(save_dir)
 
     save_path = os.path.join(save_dir, '{}.pickle'.format(save_fname))
-
     with open(save_path, 'wb') as f:
         pickle.dump([species, chosen_pcs, train_index, test_index, pcs_feats, pcs_spec_labs, pres_gmm_train, abs_gmm_train], f)
 
 def load_classification_data(load_f_name, load_f_dir=CLASS_RES_PICKLE_SAVE_DIR):
+    '''
+    Load results from the classification task
+    '''
+
     if not load_f_name.lower().endswith('.pickle'): load_f_name = load_f_name + '.pickle'
 
     if '/' in load_f_name:
@@ -84,61 +110,56 @@ def load_classification_data(load_f_name, load_f_dir=CLASS_RES_PICKLE_SAVE_DIR):
     with open(load_path, 'rb') as f:
         return pickle.load(f)
 
-
-def save_sis_data(target_spec, pres_gmm, abs_gmm, pres_dim_red, abs_dim_red, pres_feats, abs_feats, save_fname):
-    if not os.path.exists(SIS_RES_PICKLE_SAVE_DIR): os.makedirs(SIS_RES_PICKLE_SAVE_DIR)
-
-    save_path = os.path.join(SIS_RES_PICKLE_SAVE_DIR, '{}.pickle'.format(save_fname))
-
-    with open(save_path, 'wb') as f:
-        pickle.dump([target_spec, pres_gmm, abs_gmm, pres_dim_red, abs_dim_red, pres_feats, abs_feats], f)
-
-def load_sis_data(load_f_name):
-    if not load_f_name.lower().endswith('.pickle'): load_f_name = load_f_name + '.pickle'
-
-    load_path = os.path.join(SIS_RES_PICKLE_SAVE_DIR, load_f_name)
-    with open(load_path, 'rb') as f:
-        return pickle.load(f)
-
 def load_pc_spectro(pc_aud_fname):
+    '''
+    Load precomputed spectrograms linked to a point count audio file
+    '''
+
     load_path = os.path.join('pc_spectros','{}_spectro.pickle'.format(pc_aud_fname))
-    
-    with open(load_path, 'rb') as f:
-        return pickle.load(f)
-
-def load_spec_call_feats(spec, feat):
-    load_path = os.path.join('xc_feats_data', '{}_{}.pickle'.format(spec,feat))
-
-    if not os.path.exists(load_path):
-        print('No file found {}'.format(load_path))
-        return False
 
     with open(load_path, 'rb') as f:
         return pickle.load(f)
 
 def get_pcs_no_water(pc_list):
+    '''
+    Parse a list of all point counts and filter out those that were from sites near
+    water, or those with dud recordings (hard-coded)
+    '''
+
     dud_files = ['SY0000_0058','SY0000_0059','SY0000_0060','SY0000_0061','SY0000_0062','SY0000_0063','PC0000_0019','PC0001_1058','PC0001_1059','PC0001_0155']
     pcs_not_dud = [pc for pc in pc_list if pc.audio_fname not in dud_files]
 
     skip_sites = ['Riparian 1','Riparian 2','LFE river','B1 602']
     pcs_no_water = [pc for pc in pcs_not_dud if pc.site.name not in skip_sites]
-    
+
     #print('Removed sites {} to get {}/{} PCs'.format(skip_sites, len(pcs_no_water), len(pc_list)))
     return pcs_no_water
 
 def get_avi_pcs_no_water_sites(pc_list, site_list):
+    '''
+    Filter get_pcs_no_water for only avifaunal point counts
+    '''
+
     pcs_no_water = get_pcs_no_water(pc_list)
     avi_pcs_no_water = [pc for pc in pcs_no_water if pc.avi]
     #tqdm.write('{} avifaunal PCs, excluding water sites'.format(len(avi_pcs_no_water)))
     return avi_pcs_no_water
 
 def get_herp_pcs_no_water_sites(pc_list, site_list):
+    '''
+    Filter get_pcs_no_water for only herpetofaunal point counts
+    '''
+
     pcs_no_water = get_pcs_no_water(pc_list)
     herp_pcs_no_water = [pc for pc in pcs_no_water if pc.herp]
     #tqdm.write('{} herpetofaunal PCs, excluding water sites'.format(len(herp_pcs_no_water)))
     return herp_pcs_no_water
 
 def get_avi_specs_min_pres(taxa_list, pc_list, min_pres=51):
+    '''
+    Filter for avifaunal species which are present in at least <min_pres> point counts
+    '''
+
     avi_pcs_no_water = [pc for pc in pc_list if pc.avi]
 
     avi_taxa = [t for t in taxa_list if t.is_avi]
@@ -149,17 +170,11 @@ def get_avi_specs_min_pres(taxa_list, pc_list, min_pres=51):
 
     return avi_specs_min_present
 
-def get_red_list_avi_specs_min_pres(taxa_list, pc_list, min_pres=15):
-    avi_pcs_no_water = [pc for pc in pc_list if pc.avi]
-
-    avi_taxa = [t for t in taxa_list if t.is_avi]
-    avi_taxa_min_present = [at for at in avi_taxa if len([pc for pc in avi_pcs_no_water if at in pc.avi_spec_comm]) >= min_pres]
-    avi_specs_min_present = [at for at in avi_taxa_min_present if at.rank.lower() == 'species']
-    avi_specs_min_present_rl = [at for at in avi_specs_min_present if at.get_red_list_status() in ['EN','CR','VU']]
-
-    return avi_specs_min_present_rl
-
 def get_herp_specs_min_pres(taxa_list, pc_list, min_pres=51):
+    '''
+    Filter for herpetofaunal species which are present in at least <min_pres> point counts
+    '''
+
     herp_pcs_no_water = [pc for pc in pc_list if pc.herp]
 
     herp_taxa = [t for t in taxa_list if t.is_herp]
@@ -170,7 +185,26 @@ def get_herp_specs_min_pres(taxa_list, pc_list, min_pres=51):
 
     return herp_specs_min_present
 
+def get_red_list_avi_specs_min_pres(taxa_list, pc_list, min_pres=15):
+    '''
+    Return avifaunal species which are present in at least <min_pres> point counts
+    and belong to the EN, CR, or VU categories in the IUCN RED list
+    '''
+
+    avi_pcs_no_water = [pc for pc in pc_list if pc.avi]
+
+    avi_taxa = [t for t in taxa_list if t.is_avi]
+    avi_taxa_min_present = [at for at in avi_taxa if len([pc for pc in avi_pcs_no_water if at in pc.avi_spec_comm]) >= min_pres]
+    avi_specs_min_present = [at for at in avi_taxa_min_present if at.rank.lower() == 'species']
+    avi_specs_min_present_rl = [at for at in avi_specs_min_present if at.get_red_list_status() in ['EN','CR','VU']]
+
+    return avi_specs_min_present_rl
+
 def get_all_class_file_paths(string_filters, all_res_files = None, k=0, classif_res_dir = CLASS_RES_PICKLE_SAVE_DIR, spec_type='avi'):
+    '''
+    Get a list of all classification results which match the given arguments
+    '''
+
     classif_res_dir = '{}_{}'.format(classif_res_dir, spec_type)
 
     if all_res_files is None: all_res_files = os.listdir(classif_res_dir)
@@ -182,11 +216,11 @@ def get_all_class_file_paths(string_filters, all_res_files = None, k=0, classif_
     for filt in string_filters:
         filt_res_files = [f for f in filt_res_files if filt in f]
 
+    # If k = -1, then return all results from all K folds
     if k != -1:
         filt_res_files = [f for f in filt_res_files if 'k{}'.format(k) in f]
 
     filt_res_paths = [os.path.join(classif_res_dir,f) for f in filt_res_files if classif_res_dir not in f]
-
 
     if len(filt_res_paths) == 0:
         print('No results files found for string_filters {}'.format(string_filters))
@@ -195,6 +229,14 @@ def get_all_class_file_paths(string_filters, all_res_files = None, k=0, classif_
     return sorted(filt_res_paths)
 
 def get_llhood_ratio_score(feat_samps, pres_gmm, abs_gmm, score_type, score_samps=None):
+    '''
+    Return a classification score (confidence of a species being present) from a list
+    of CNN-derived audio features.
+
+    score_type determines how an array of likelihood ratios is converted into a final
+    classification confidence for a whole audio recording
+    '''
+
     if score_samps is None:
         score_samps = pres_gmm.score_samples(feat_samps) - abs_gmm.score_samples(feat_samps)
 
@@ -214,6 +256,14 @@ def get_llhood_ratio_score(feat_samps, pres_gmm, abs_gmm, score_type, score_samp
 
 
 def get_secs_per_audio_feat(feat_name):
+    '''
+    From an audio feature name (e.g. raw_audioset_feats_3s) return how many seconds
+    that audio feature represents.
+
+    Note: raw_audioset_feats_3s actually corresponds to 2.88s (the naming is misleading)
+    but this function accounts for this and returns the correct value (2.88 in this case)
+    '''
+
     target_secs_per_feat = feat_name.split('_')[-1].split('s')[0]
     if target_secs_per_feat.startswith('0'): target_secs_per_feat = float(target_secs_per_feat)/100
     else: target_secs_per_feat = float(target_secs_per_feat)
@@ -223,6 +273,10 @@ def get_secs_per_audio_feat(feat_name):
     return round(actual_secs_per_feat,2)
 
 def get_nparray_from_feats(feats_list):
+    '''
+    Convert a list of AudioFeats to an nparray
+    '''
+
     if type(feats_list) is not list:
         feats_list = list(feats_list)
 
@@ -230,6 +284,12 @@ def get_nparray_from_feats(feats_list):
     return np.vstack(list_feats)
 
 def unpack_feats_from_pcs(pc_list, only_af_prop_centres=False):
+    '''
+    Combine all audio features from a list of point counts into one nparray
+
+    If only_af_prop_centres is set, this assumes the clustering step has already been run on the PointCount objects
+    '''
+
     if only_af_prop_centres:
         tqdm.write('Only using features from cluster centres (afin prop) from PC audio data')
     else:
@@ -248,30 +308,6 @@ def unpack_feats_from_pcs(pc_list, only_af_prop_centres=False):
 
     return np.asarray(all_afs)
 
-
-def get_feats_from_pcs_old(pc_list, only_af_prop_centres=False):
-    if only_af_prop_centres:
-        tqdm.write('Only using features from cluster centres (afin prop) from PC audio data')
-    else:
-        tqdm.write('Using all features from PC audio data')
-
-    feats = []
-    feats_offs_secs = []
-    feats_pcs = []
-    for pc in pc_list:
-        if not only_af_prop_centres:
-            feats.append(pc.af_prop_clust.cluster_centers_)
-        else:
-            feats.append(pc.audio_feats)
-
-        feats_offs_secs.append([i * pc.secs_per_audio_feat for i in range(pc.audio_feats.shape[0])])
-        feats_pcs.append([pc] * pc.audio_feats.shape[0])
-
-    feats = np.vstack(np.asarray(feats))
-    feats_offs_secs = np.hstack(np.asarray(feats_offs_secs))
-    feats_pcs = np.hstack(np.asarray(feats_pcs))
-
-    return feats, feats_offs_secs, feats_pcs
 
 def smooth_density_curve(data, interp_pts=1000):
     """

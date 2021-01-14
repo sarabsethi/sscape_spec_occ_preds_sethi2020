@@ -19,6 +19,10 @@ except ImportError:
     pass
 
 class AudioFeat:
+    '''
+    Data structure to represent audio features. Main purpose is to link feature
+    vectors to point counts
+    '''
 
     def __init__(self, feat_vec, pc, offs_secs):
         self.feat_vec = feat_vec
@@ -27,9 +31,18 @@ class AudioFeat:
         self.dur_secs = pc.secs_per_audio_feat
 
     def play_audio(self, audio_dir='/mnt/e/pc_recordings', print_str = None, blocking=False):
+        '''
+        Play audio data. This might be unreliable, as it depends upon OS, audio
+        playback libraries etc.
+        '''
+
+        # Get audio waveform data
         sr, data = self.get_audio_data(audio_dir)
 
+        # Wait is intentionally before play, to ensure the last audio clip has finished before playing this one
         sd.wait()
+
+        # Play audio data through speakers
         if print_str is None:
             tqdm.write('Playing {} {} (+{}s)'.format(self.pc.site.name, self.pc.dt, self.offs_secs))
         else:
@@ -39,6 +52,10 @@ class AudioFeat:
         return sr, data
 
     def get_audio_data(self, audio_dir='/mnt/e/pc_recordings'):
+        '''
+        Get audio waveform data from wav file
+        '''
+
         full_wav_path = os.path.join(audio_dir, self.pc.audio_fname + '.wav')
 
         sr, data = wavfile.read(full_wav_path)
@@ -58,10 +75,16 @@ class Taxon:
     '''
 
     def parse_excel_vals(self, gbif_sql_conn, t_row):
+        '''
+        Read row of excel file and create Taxon object
+        '''
+
+        # Checl that the taxon is in the GBIF taxon definitions
         #gbif_return = gbif_helper.web_gbif_validate(t_row['Taxon name'],t_row['Taxon type'])
         gbif_return = gbif_helper.local_gbif_validate(gbif_sql_conn,t_row['Taxon name'],t_row['Taxon type'])
 
         if gbif_return['status'] == 'found':
+            # If found, create taxon object
             self.tree_hier = gbif_return['hier']
             self.comm_name = t_row['Name']
             self.name = gbif_return['canon'][2]
@@ -76,17 +99,24 @@ class Taxon:
 
             return True
         else:
+            # if not found return False to indicate an error
             tqdm.write('Couldn\'t match taxon {} ({})'.format(t_row['Taxon name'],t_row['Taxon type']))
             return False
 
     def get_red_list_status(self, force_remote=False):
+        '''
+        Using the IUCN RED list API, ascertain the category of the species
+        '''
+
+        # Create local directory to cache RED list results
         red_list_dir = 'red_list_api'
         if not os.path.exists(red_list_dir): os.makedirs(red_list_dir)
 
         f_path = os.path.join(red_list_dir,'{}.json'.format(self.comm_name.lower().replace(' ','-')))
 
         if not os.path.exists(f_path) or force_remote:
-            #token = '9bb4facb6d23f48efbf424bb05c0c1ef1cf6f468393bc745d42179ac4aca5fee' # Test API token
+            # If cached RED list result not available, grab from API
+
             token = 'd556dd8abceb3d69c463ef8bd00fbf76e5290905049800ad29d21206214efe98'
             enc_name = urllib.parse.quote(self.name)
             url = 'https://apiv3.iucnredlist.org/api/v3/species/{}?token={}'.format(enc_name,token)
@@ -100,12 +130,14 @@ class Taxon:
                 json.dump(cont, json_file)
 
         with open(f_path) as json_load_file:
+            # Open cached result, and return category of species
+
             data = json.load(json_load_file)
 
             try:
                 return data['result'][0]['category']
             except:
-                #print('error parsing Red List API result: {}'.format(data))
+                print('error parsing Red List API result: {}'.format(data))
                 return None
 
     def __str__(self):
@@ -116,6 +148,7 @@ class Site:
     '''
     Monitoring site: has lat, long, elevation info
     '''
+
     def parse_excel_vals(self, s_row):
         # Read in basic information
         self.name = s_row['Location name']
@@ -126,6 +159,8 @@ class Site:
         return True
 
     def get_agb(self):
+        # Get AGB of the site using a hardcoded lookup approach
+
         mean_agbs = np.asarray([0.270780356, 0.674964289, 0.714754937, 1.103958403, 2.071538492, 2.381011351, 2.542379803, 2.707194682, 2.854348647, 2.854348647, 3.017740631, 3.566314216, 6.804037942, 6.804037942])
         site_names = np.asarray(['OP Belian', 'OP3 843', 'C Matrix', 'D Matrix', 'E1 648', 'D100 641', 'E100 edge', 'C10 621', 'Riparian 1', 'Riparian 2', 'B1 602', 'B10', 'VJR 1', 'VJR 2'])
 
@@ -135,16 +170,18 @@ class Site:
         else: return -1
 
     def get_abbrv_name(self):
+        # Get abbreviation of the site relating to its type (Old growth = OG, Salvage logged = SL, etc.)
+
         if 'matrix' in self.name.lower():
-            return 'SL'
+            return 'SL' # Salvage logged
         if 'OP' in self.name:
-            return 'OP'
+            return 'OP' # Oil palm
         if 'VJR' in self.name:
-            return 'OG'
+            return 'OG' # Old growth
         if 'Riparian' in self.name:
-            return 'RP'
+            return 'RP' # Riparian
         if self.name in ['E1 648', 'D100 641', 'E100 edge', 'C10 621', 'B1 602', 'B10']:
-            return 'LF'
+            return 'LF' # Logged forest
 
 
     def __str__(self):
@@ -185,6 +222,7 @@ class PointCount:
         return True
 
     def link_audio_feats(self, feat_name, feats_db_helper):
+        # Link CNN-derived audio features to point count object
         self.audio_feat_name = feat_name
         self.secs_per_audio_feat = pc_data_tools.get_secs_per_audio_feat(feat_name)
 
@@ -212,9 +250,8 @@ class PointCount:
         self.avi_spec_comm = []
         self.herp_spec_comm = []
         self.tot_spec_comm = []
-        for r_idx, r_row in pc_data_df.iterrows():
-            #if r_row['Audio_visual'] is 'V': continue
 
+        for r_idx, r_row in pc_data_df.iterrows():
             try:
                 taxon = [t for t in valid_taxa if r_row['Species_common_name'] == t.comm_name][0]
             except Exception:
@@ -234,12 +271,14 @@ class PointCount:
 
 
     def af_prop_cluster_feats(self):
+        # Cluster audio features in point count using affinity propogation clustering
         self.af_prop_clust = AffinityPropagation().fit(self.audio_feats)
 
         self.af_prop_clust.affinity_matrix_ = []
         return self.af_prop_clust
 
     def gmm_cluster_feats(self):
+        # Cluster features in point count using GMM / DPGMM
         n_comps = 100
         cov_type = 'full'
 
