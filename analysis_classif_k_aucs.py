@@ -3,12 +3,17 @@ from pc_data_tools import load_classification_data, get_all_class_file_paths, ge
 from sklearn.metrics import plot_confusion_matrix
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
-from sklearn.metrics import balanced_accuracy_score, f1_score, accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import roc_auc_score
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 import pickle
 
+'''
+Use trained GMM models (from analysis_classif_species_logo) to perform classifications
+and output AUC metrics
+'''
 
+# This enables runs to be done one at a time on HPC infrastructure
 TARGET_IX = os.getenv('PBS_ARRAY_INDEX')
 hpc_arr_job = TARGET_IX is not None
 if TARGET_IX is None:
@@ -25,6 +30,7 @@ all_spec_types = ['avi-rl','avi','herp']
 for spec_type in all_spec_types:
     for score_type in all_score_types:
         for feat in all_feats:
+            # If on HPC, only process one run (so many can be done in parallel)
             run = run + 1
             if hpc_arr_job and int(TARGET_IX) != run:
                 continue
@@ -58,12 +64,15 @@ for spec_type in all_spec_types:
                 test_score_ks = []
                 test_lab_ks = []
                 test_hr_ks = []
+
+                # Loop through each fold of the cross validation classification task
                 for k in range(tot_k):
                     load_f_path = load_f_path_stem + '_k{}.pickle'.format(k)
                     if not os.path.exists(load_f_path):
                         print('ERROR NO FILE FOUND: {}'.format(load_f_path))
                         raise Exception('NO FILE')
 
+                    # Load the trained GMMs and train/test data for this fold of the cross-validation taask
                     species, chosen_pcs, train_index, test_index, pcs_feats, pcs_spec_labs, pres_gmm_train, abs_gmm_train = load_classification_data(load_f_path)
 
                     labs_train = pcs_spec_labs[train_index]
@@ -73,6 +82,7 @@ for spec_type in all_spec_types:
 
                     spec_k_sites.append(chosen_pcs[test_index[0]].site)
 
+                    # Determine classification scores for the individual point counts from trained GMMs
                     scores_train = np.asarray([get_llhood_ratio_score(feat_coll, pres_gmm_train, abs_gmm_train, score_type) for feat_coll in pcs_feats[train_index]])
                     scores_test = np.asarray([get_llhood_ratio_score(feat_coll, pres_gmm_train, abs_gmm_train, score_type) for feat_coll in pcs_feats[test_index]])
                     scores_train = scores_train.reshape(-1, 1)
@@ -87,15 +97,18 @@ for spec_type in all_spec_types:
                     test_hr_ks.append(hrs_test)
 
                     if len(np.unique(labs_test)) == 1:
+                        # If there's only one class (the species is always/never present) then AUC is undefined
                         print('k = {}, only one class in test set (label = {}, test site {})'.format(k,np.unique(labs_test),site_name))
                         auc_ks.append(np.nan)
                     else:
+                        # Otherwise calculate AUC using the classification scores
                         auc_k_ = roc_auc_score(labs_test, scores_test)
                         tqdm.write('k = {}, auc_k_ = {}'.format(k, auc_k_))
                         auc_ks.append(auc_k_)
 
                 auc = np.nanmean(auc_ks)
 
+                # Get AGB for each site
                 unq_site_names, site_indices = np.unique([p.site.name for p in chosen_pcs],return_index=True)
                 unq_sites = np.asarray([p.site for p in chosen_pcs])[site_indices]
                 unq_site_agbs = [s.get_agb() for s in unq_sites]
@@ -105,6 +118,7 @@ for spec_type in all_spec_types:
                 elif spec_type == 'avi' or spec_type == 'avi-rl':
                     pres_site_names = np.asarray([p.site.name for p in chosen_pcs if species in p.avi_spec_comm])
 
+                # Calculate mean AGB that each species is encountered at (to test later if this affects AUC)
                 tot_hist = [np.sum(np.asarray([p.site.name for p in chosen_pcs]) == s) for s in unq_site_names]
                 spec_hist = [np.sum(pres_site_names == s) for s in unq_site_names]
                 spec_hist_weighted = np.asarray(spec_hist) / np.asarray(tot_hist)
@@ -112,6 +126,7 @@ for spec_type in all_spec_types:
 
                 tqdm.write('{}, auc = {}'.format(species.comm_name, round(auc,2)))
 
+                # Save all the results from this fold of the CV task to arrays
                 all_auc = np.hstack((all_auc,auc))
                 all_auc_ks.append(auc_ks)
                 all_train_lab_ks.append(train_lab_ks)
@@ -124,11 +139,12 @@ for spec_type in all_spec_types:
                 all_n_occs = np.hstack((all_n_occs,np.sum(pcs_spec_labs)))
                 all_k_sites.append(spec_k_sites)
 
+            # Save results to file
             fig_savef = 'classif_scores_sorted_{}_{}_{}'.format(feat,score_type,spec_type)
 
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
-
+                
             save_path = os.path.join(out_dir,'{}.pickle'.format(fig_savef))
             with open(save_path, 'wb') as f:
                 pickle.dump([all_specs, all_n_occs, all_spec_agbs, all_auc, all_auc_ks, all_train_scores_ks, all_train_lab_ks, all_test_scores_ks, all_test_lab_ks, all_test_hrs_ks, all_k_sites], f)
