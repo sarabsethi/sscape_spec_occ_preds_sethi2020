@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import matplotlib
 from matplotlib.lines import Line2D
+from scipy.spatial.distance import pdist
+from geopy.distance import vincenty
 
 def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_feats_3s', results_dir='fig_data_logo'):
     '''
@@ -14,6 +16,7 @@ def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_fe
 
     auc_per_site = None
     site_names = None
+    all_sites = None
 
     spec_types = []
     leg_elements = []
@@ -30,6 +33,7 @@ def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_fe
             site_names = [s.name for s in all_k_sites[0]]
             site_agbs = [s.get_agb() for s in all_k_sites[0]]
             site_sort_ix_agb = np.argsort(site_agbs)
+            all_sites = all_k_sites[0]
         else:
             for k_sites in all_k_sites:
                 snames = [s.name for s in k_sites]
@@ -68,8 +72,22 @@ def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_fe
     ys_auc = np.asarray(ys_auc)
 
     # Check if there's any correlation between AGB and AUC
-    rho, p = stats.pearsonr(xs_agb,ys_auc)
+    x_notnan = xs_agb[~np.isnan(ys_auc)]
+    y_notnan = ys_auc[~np.isnan(ys_auc)]
+    rho, p = stats.pearsonr(x_notnan,y_notnan)
     print('Pearson corr between AGB and AUC: rho = {}, p = {}'.format(rho, p))
+
+    # Determine pairwise distances between sites
+    coords = []
+    for site in all_sites:
+        coords.append([site.lat, site.long])
+    coords = np.asarray(coords)
+
+    # Using the vincenty distance function to determine pairwise distances
+    m_dist = pdist(coords, # Coordinates matrix or tuples list
+               # Vicenty distance in lambda function
+               lambda u, v: vincenty(u, v).kilometers)
+    print('Closest distance = {}, mean distance = {}'.format(np.min(m_dist),np.mean(m_dist)))
 
     plt.gca().legend(handles=leg_elements)
     plt.xticks(range(len(site_names)),site_names[site_sort_ix_agb], rotation=35)
