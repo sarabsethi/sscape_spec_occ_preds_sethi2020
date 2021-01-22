@@ -19,4 +19,6 @@ More detailed instructions will follow in the future, but the following instruct
 
 * Fig. S2: `python fig_compare_classif_score_types.py`
 * Fig. S3: `python fig_within_pc_llhood_ratios.py`
-* Fig. S4: `python fig_classif_surface_site_time.py` with variable in script `show_all_specs = True`
+* Fig. S4: `python fig_n_occs_auc_corr.py` 
+* Fig. S5: `python fig_classif_surface_site_time.py` with variable in script `show_all_specs = True`
+* Fig. S6: `python fig_auc_by_site.py`
