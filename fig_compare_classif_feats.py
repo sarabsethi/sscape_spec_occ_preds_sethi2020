@@ -60,6 +60,7 @@ def do_auc_tscale_plot(lab_specs, lab_all_specs=False, all_spec_types=['herp','a
         max_secs = []
 
         # Loop through each species in turn
+        done_lab = False
         for s_ix, spec in enumerate(all_specs):
             ys = []
 
@@ -127,7 +128,13 @@ def do_auc_tscale_plot(lab_specs, lab_all_specs=False, all_spec_types=['herp','a
             if auc_p_val > 0.05: ls = '--'
 
             # Plot a line showing AUC for the given species across different timescales of audio features
-            p = plt.plot(secs,ys, lw=lw, ls=ls, alpha=alpha, c=c,label=get_nice_lab(spec_type) if s_ix == 0 else '')
+            if done_lab or auc_p_val > 0.05:
+                lab = ''
+            else:
+                lab = get_nice_lab(spec_type)
+                done_lab = True
+
+            p = plt.plot(secs,ys, lw=lw, ls=ls, alpha=alpha, c=c,label=lab)
 
         bins = secs + [(secs[-1]+1)]
         hist, _ = np.histogram(max_secs,bins)

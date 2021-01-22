@@ -120,21 +120,21 @@ def plot_chi2_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', fe
 
     print('AUC max: {}, min {}'.format(np.max(xs_auc), np.min(xs_auc)))
 
-    # Calculate pearson correlations between chi^2 statistics and AUCs
-    s_rho, s_p = stats.pearsonr(xs_auc,ys_site_chi2)
+    # Calculate spearman correlations between chi^2 statistics and AUCs
+    s_rho, s_p = stats.spearmanr(xs_auc,ys_site_chi2)
     print('site {} {}'.format(s_rho,s_p))
 
-    h_rho, h_p = stats.pearsonr(xs_auc,ys_hr_chi2)
+    h_rho, h_p = stats.spearmanr(xs_auc,ys_hr_chi2)
     print('hour {} {}'.format(h_rho,h_p))
 
-    sh_rho, sh_p = stats.pearsonr(xs_auc,ys_site_hr_chi2)
+    sh_rho, sh_p = stats.spearmanr(xs_auc,ys_site_hr_chi2)
     print('site hour {} {}'.format(sh_rho,sh_p))
 
-    noccs_rho, noccs_p = stats.pearsonr(xs_auc,all_n_occs)
+    noccs_rho, noccs_p = stats.spearmanr(xs_auc,all_n_occs)
     print('all_n_occs {} {}'.format(noccs_rho,noccs_p))
 
     plt_ys = ys_hr_chi2
-    plt_rho, plt_p = stats.pearsonr(xs_auc,plt_ys)
+    plt_rho, plt_p = stats.spearmanr(xs_auc,plt_ys)
 
     avi_chi2s = []
     avi_rl_chi2s = []
@@ -148,7 +148,7 @@ def plot_chi2_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', fe
         c = get_spec_type_col(xs_spec_types[s_ix])
 
         pt_sz = 50
-        pt_a = 0.3
+        pt_a = 0.5
         spec_str = s.comm_name.lower().replace(' ','-')
 
         # Annotate chosen species on scatter plot
@@ -190,7 +190,7 @@ def plot_chi2_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', fe
 
     # Plot line of best fit
     m, c = np.polyfit(xs_auc, plt_ys, 1)
-    plt.plot(xs_auc, m*xs_auc + c, c='k', alpha=0.2)
+    # plt.plot(xs_auc, m*xs_auc + c, c='k', alpha=0.2)
 
     plt.ylabel('Occurrence/hour $\chi^2$ statistic')
     plt.xlabel('\nAUC ({}s per feature, {})'.format(get_secs_per_audio_feat(feat),get_nice_lab(score_type)))
@@ -200,7 +200,7 @@ def plot_chi2_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', fe
     else:
         p_txt = 'p = {}'.format(round(plt_p,6))
 
-    plt.text(sorted(xs_auc)[0], sorted(plt_ys)[-1], 'Pearson correlation:\n' + r'$\rho$ = {}, {}'.format(round(plt_rho,2), p_txt), verticalalignment='top')
+    plt.text(sorted(xs_auc)[0], sorted(plt_ys)[-1]-20, 'Spearman correlation:\n' + r'$\rho$ = {}, {}'.format(round(plt_rho,2), p_txt), verticalalignment='top')
 
     plt.tight_layout()
 

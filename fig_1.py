@@ -39,5 +39,5 @@ plt.gca().text(-0.07, 1.07, '(b)', transform=plt.gca().transAxes,fontsize=26, va
 
 plt.tight_layout(pad=3.0)
 
-plt.savefig(os.path.join('figs','fig_2.pdf'),format='pdf')
+plt.savefig(os.path.join('figs','fig_1.pdf'),format='pdf')
 plt.show()

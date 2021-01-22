@@ -137,7 +137,7 @@ class Taxon:
             try:
                 return data['result'][0]['category']
             except:
-                print('error parsing Red List API result: {}'.format(data))
+                #print('error parsing Red List API result: {}'.format(data))
                 return None
 
     def __str__(self):

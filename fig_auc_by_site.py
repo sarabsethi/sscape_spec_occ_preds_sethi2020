@@ -74,8 +74,8 @@ def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_fe
     # Check if there's any correlation between AGB and AUC
     x_notnan = xs_agb[~np.isnan(ys_auc)]
     y_notnan = ys_auc[~np.isnan(ys_auc)]
-    rho, p = stats.pearsonr(x_notnan,y_notnan)
-    print('Pearson corr between AGB and AUC: rho = {}, p = {}'.format(rho, p))
+    rho, p = stats.spearmanr(x_notnan,y_notnan)
+    print('Spearman corr between AGB and AUC: rho = {}, p = {}'.format(rho, p))
 
     # Determine pairwise distances between sites
     coords = []

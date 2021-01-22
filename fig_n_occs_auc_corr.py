@@ -53,7 +53,7 @@ def plot_noccs_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', f
 
     # Calculate correlation between AUC and number of occurrences per species
     plt_ys = all_n_occs
-    plt_rho, plt_p = stats.pearsonr(xs_auc,plt_ys)
+    plt_rho, plt_p = stats.spearmanr(xs_auc,plt_ys)
 
     for s_ix, s in enumerate(xs_specs):
         c = get_spec_type_col(xs_spec_types[s_ix])
@@ -65,8 +65,10 @@ def plot_noccs_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', f
         # Label species on the scatter plot
         if lab_all_specs or spec_str in lab_specs:
             pt_sz = 50
+            fsz = 7
             if not lab_all_specs:
                 pt_sz = 90
+                fsz = 18
 
             # Hack to make sure species annotations don't overlap
             ha = 'left'
@@ -76,7 +78,7 @@ def plot_noccs_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', f
                 ha = 'right'
                 hoffs = -hoffs
 
-            plt.text(xs_auc[s_ix]+hoffs,plt_ys[s_ix]+voffs,s.comm_name,color=c,verticalalignment='center',horizontalalignment=ha)
+            plt.text(xs_auc[s_ix]+hoffs,plt_ys[s_ix]+voffs,s.comm_name,color=c,verticalalignment='center',horizontalalignment=ha,fontsize=fsz)
             pt_a = 1
 
         # Scatter point for given species
@@ -84,7 +86,8 @@ def plot_noccs_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', f
 
     # Plot line of best fit
     m, c = np.polyfit(xs_auc, plt_ys, 1)
-    plt.plot(xs_auc, m*xs_auc + c, c='k', alpha=0.2)
+
+    #plt.plot(xs_auc, m*xs_auc + c, c='k', alpha=0.2)
 
     plt.ylabel('Number of occurrences in point counts')
     plt.xlabel('\nAUC ({}s per feature, {})'.format(get_secs_per_audio_feat(feat),get_nice_lab(score_type)))
@@ -94,7 +97,7 @@ def plot_noccs_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', f
     else:
         p_txt = 'p = {}'.format(round(plt_p,6))
 
-    plt.text(sorted(xs_auc)[0], sorted(plt_ys)[-1], 'Pearson correlation:\n' + r'$\rho$ = {}, {}'.format(round(plt_rho,2), p_txt), verticalalignment='top')
+    plt.text(sorted(xs_auc)[0], sorted(plt_ys)[-1], 'Spearman correlation:\n' + r'$\rho$ = {}, {}'.format(round(plt_rho,2), p_txt), verticalalignment='top')
 
     plt.tight_layout()
 
