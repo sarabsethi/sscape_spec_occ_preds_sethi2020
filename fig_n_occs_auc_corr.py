@@ -40,14 +40,22 @@ def plot_noccs_fig(lab_specs, lab_all_specs, all_spec_types, score_type='p60', f
             chosen_specs = get_herp_specs_min_pres(all_taxa, chosen_pcs)
 
         # Loop through each species extracting number of occurrences and species AUCs
+        spec_type_xs_auc = []
+        spec_type_ys = []
         for spec_ix, spec in enumerate(chosen_specs):
             auc_ix = np.where((auc_spec_names == spec.comm_name))[0]
             auc = aucs[auc_ix][0]
+
+            spec_type_xs_auc.append(auc)
+            spec_type_ys.append(spec_n_occs[spec_ix])
 
             xs_auc.append(auc)
             xs_specs.append(spec)
             xs_spec_types.append(spec_type)
             all_n_occs.append(spec_n_occs[spec_ix])
+
+        spec_type_r, spec_type_p = stats.spearmanr(spec_type_xs_auc,spec_type_ys)
+        print('{}: spec_type_r = {}, spec_type_p = {}'.format(spec_type, spec_type_r, spec_type_p))
 
     xs_auc = np.asarray(xs_auc)
 

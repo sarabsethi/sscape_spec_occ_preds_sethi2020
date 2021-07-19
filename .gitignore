@@ -3,6 +3,7 @@ red_list_api/*
 *.pickle
 *.zip
 *.pdf
+*.svg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

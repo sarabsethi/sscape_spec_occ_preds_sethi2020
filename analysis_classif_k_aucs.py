@@ -144,7 +144,7 @@ for spec_type in all_spec_types:
 
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
-                
+
             save_path = os.path.join(out_dir,'{}.pickle'.format(fig_savef))
             with open(save_path, 'wb') as f:
                 pickle.dump([all_specs, all_n_occs, all_spec_agbs, all_auc, all_auc_ks, all_train_scores_ks, all_train_lab_ks, all_test_scores_ks, all_test_lab_ks, all_test_hrs_ks, all_k_sites], f)
