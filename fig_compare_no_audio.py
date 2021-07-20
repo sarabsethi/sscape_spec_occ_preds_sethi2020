@@ -8,9 +8,9 @@ import copy
 import scipy.stats
 from pc_data_tools import get_spec_type_col
 
-def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp','avi-rl'], acd_dist='500m', feat='raw_audioset_feats_3s', score_type='p60', lab_specs=['asian-red-eyed-bulbul','sooty-capped-babbler', 'tree-hole-frog','rough-guardian-frog','rhinoceros-hornbill']):
+def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp','avi-rl'], acd_dist='100m', feat='raw_audioset_feats_3s', score_type='p60', lab_specs=['asian-red-eyed-bulbul','sooty-capped-babbler', 'tree-hole-frog','rough-guardian-frog','rhinoceros-hornbill']):
     '''
-    Compare AUC of occurrence predictions based on soundscapes to that possible using only AGB data
+    Compare AUC of occurrence predictions based on soundscapes to that possible using only ACD data
     '''
 
     lab_specs = []
@@ -21,7 +21,7 @@ def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp'
     spec_types = []
 
     for spec_type in all_spec_types:
-        # Load classification results of AGB based classifier
+        # Load classification results of ACD based classifier
         no_audio_f = 'no_audio_classif_scores_{}_acd-{}.pickle'.format(spec_type, acd_dist)
         print(no_audio_f)
         with open(os.path.join(results_dir, no_audio_f), 'rb') as f:
@@ -89,13 +89,13 @@ def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp'
         c = 'k'
         plt.scatter(ix,np.mean(data),s=300,c=c)
         h = scipy.stats.sem(data)
-        plt.errorbar(ix,np.mean(data),h,c=c,lw=lw,capsize=30,capthick=lw)
+        plt.errorbar(ix,np.mean(data),h,c=c,lw=7,capsize=30,capthick=7)
 
     x_buff = 0.4
     plt.xlim([-x_buff,1 + x_buff])
 
     plt.ylabel('Species classification AUC\n')
-    plt.xticks(np.asarray(range(len(plt_mat))),['AGB model', 'Soundscape model'])
+    plt.xticks(np.asarray(range(len(plt_mat))),['ACD model', 'Soundscape model'])
     plt.tight_layout()
 
 if __name__ == '__main__':
