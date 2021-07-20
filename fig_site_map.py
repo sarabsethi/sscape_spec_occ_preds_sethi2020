@@ -46,7 +46,7 @@ ax.set_extent([min_long-long_offs, max_long+long_offs, min_lat-lat_offs, max_lat
 ax.add_image(request_satellite, 13)
 
 for s in unq_sites:
-    sz = 5 + (0.5 * s.get_agb())
+    sz = 5 + (0.05 * s.get_agb())
 
     abbrv = s.get_abbrv_name()
     if abbrv == 'OG': c = '#00FF00'

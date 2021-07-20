@@ -54,7 +54,7 @@ for acd_dist in all_acd_dists:
 
                 # Get AGB for each site
                 all_site_names = np.asarray([pc.site.name for pc in chosen_pcs])
-                all_site_agbs = np.asarray([pc.site.get_agb() for pc in chosen_pcs])
+                all_site_agbs = np.asarray([pc.site.get_agb(average_size=acd_dist) for pc in chosen_pcs])
                 unq_sites, unq_site_ixs = np.unique(all_site_names, return_index=True)
                 unq_site_agbs = all_site_agbs[unq_site_ixs]
 

@@ -8,7 +8,7 @@ import copy
 import scipy.stats
 from pc_data_tools import get_spec_type_col
 
-def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp','avi-rl'], acd_dist='100m', feat='raw_audioset_feats_3s', score_type='p60', lab_specs=['asian-red-eyed-bulbul','sooty-capped-babbler', 'tree-hole-frog','rough-guardian-frog','rhinoceros-hornbill']):
+def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp','avi-rl'], acd_dist='500m', feat='raw_audioset_feats_3s', score_type='p60', lab_specs=['asian-red-eyed-bulbul','sooty-capped-babbler', 'tree-hole-frog','rough-guardian-frog','rhinoceros-hornbill']):
     '''
     Compare AUC of occurrence predictions based on soundscapes to that possible using only AGB data
     '''
@@ -23,6 +23,7 @@ def plot_no_audio_comp(results_dir='fig_data_logo', all_spec_types=['avi','herp'
     for spec_type in all_spec_types:
         # Load classification results of AGB based classifier
         no_audio_f = 'no_audio_classif_scores_{}_acd-{}.pickle'.format(spec_type, acd_dist)
+        print(no_audio_f)
         with open(os.path.join(results_dir, no_audio_f), 'rb') as f:
             all_specs_na, _, _, aucs_na, _, _ = pickle.load(f)
 
