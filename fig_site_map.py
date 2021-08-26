@@ -56,7 +56,7 @@ for s in unq_sites:
 
     plt.plot(s.long, s.lat, transform=ccrs.PlateCarree(), markersize=sz, marker='o', color=c)
     plt.text(s.long, s.lat, '{} ({})'.format(s.get_abbrv_name(), s.name), transform=ccrs.PlateCarree(), color=c, ha='center', va='top', fontsize=13)
-    print('{}: {} {}'.format(s.name, s.long, s.lat))
+    print('{}: {} {} (AGB = {})'.format(s.name, s.long, s.lat, s.get_agb()))
 
 # need a font that support enough Unicode to draw up arrow. need space after Unicode to allow wide char to be drawm?
 # plt.text(max_long+0.01, min_lat-0.01, u'\u25B2 \nN ', transform=ccrs.PlateCarree(), va='center', color='yellow', fontsize=15, family='Arial')

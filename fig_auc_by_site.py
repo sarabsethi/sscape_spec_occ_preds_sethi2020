@@ -7,7 +7,7 @@ from scipy import stats
 import matplotlib
 from matplotlib.lines import Line2D
 from scipy.spatial.distance import pdist
-from geopy.distance import vincenty
+from geopy.distance import geodesic
 
 def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_feats_3s', results_dir='fig_data_logo'):
     '''
@@ -83,10 +83,10 @@ def plot_auc_by_site_fig(all_spec_types, score_type='p60', feat='raw_audioset_fe
         coords.append([site.lat, site.long])
     coords = np.asarray(coords)
 
-    # Using the vincenty distance function to determine pairwise distances
+    # Using the geodesic distance function to determine pairwise distances
     m_dist = pdist(coords, # Coordinates matrix or tuples list
                # Vicenty distance in lambda function
-               lambda u, v: vincenty(u, v).kilometers)
+               lambda u, v: geodesic(u, v).kilometers)
     print('Closest distance = {}, mean distance = {}'.format(np.min(m_dist),np.mean(m_dist)))
 
     plt.gca().legend(handles=leg_elements)
